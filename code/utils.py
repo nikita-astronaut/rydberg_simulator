@@ -27,6 +27,11 @@ class Sampler(object):
 
         return self.numbers[self.ctr]
 
+    #def energy_multiple(self, confs):
+    #    return (1. / self.config.M) * np.einsum('ita,itb,ab->i', conf, conf, self.config.interaction) -
+    #           (self.config.delta / self.config.M) * np.sum(conf) - \
+    #           self.config.Jt * np.sum(conf * np.roll(conf, shift=-1, axis=-1))
+
 
     def energy(self, conf):
         return (1. / self.config.M) * np.trace(conf.T @ self.config.interaction @ conf) - \
@@ -46,12 +51,31 @@ class Sampler(object):
 
 
         dE = self.energy(proposal) - self.E
-        #print('hex move, dE = ', dE)
+        print('tube hex move, dE = ', dE)
         #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
         #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
 
         #print('dE_Jt = ', self.config.Jt * np.sum(proposal * np.roll(proposal, shift=-1, axis=-1)) - self.config.Jt * np.sum(self.state * np.roll(self.state, shift=-1, axis=-1)))
         if self.return_rnd() < np.exp(-dE * self.config.beta):
+            return proposal, True
+        else:
+            return self.state, False
+
+
+    def move_hexagon(self, hexagon, tidx):
+        proposal = self.state.copy()
+        #t_slice = np.random.randint(0, self.config.M)
+        proposal[hexagon, tidx] *= -1
+
+
+        dE = self.energy(proposal) - self.E
+        print('single hex move, dE = ', dE)
+        #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
+        #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
+
+        #print('dE_Jt = ', self.config.Jt * np.sum(proposal * np.roll(proposal, shift=-1, axis=-1)) - self.config.Jt * np.sum(self.state * np.roll(self.state, shift=-1, axis=-1)))
+        if self.return_rnd() < np.exp(-dE * self.config.beta):
+            print('ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             return proposal, True
         else:
             return self.state, False

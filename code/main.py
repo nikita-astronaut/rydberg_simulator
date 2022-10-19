@@ -14,6 +14,7 @@ correlator = np.zeros((opt_config.N_sites, opt_config.N_sites))
 magnetisation = 0
 energy = 0
 accepted_hex = 0
+accepted_hex_single = 0
 accepted_tube = 0
 
 nobs = 0
@@ -29,7 +30,7 @@ for n_iter in range(1000000):
         print('CORRELATOR:', correlator[0, np.array([8, 16, 24, 12, 18, 25])] / nobs)
         print('ENERGY_PRINT:', energy / nobs)
 
-    if n_iter % 2 == 0:
+    if n_iter % 3 == 1:
         hexagon = opt_config.hexagons[np.random.randint(0, len(opt_config.hexagons))]
 
         proposal, accepted = sampler.move_hexagonal_tube(hexagon)
@@ -38,7 +39,20 @@ for n_iter in range(1000000):
         #    print('!!!!!!!!!!!!!!!!!!!!!!!!!! HEXAGON FLIP ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         accepted_hex += accepted
 
-        print('hex acceptance:', accepted_hex / (n_iter + 1) / 0.5)
+
+        print('hex acceptance:', accepted_hex / (n_iter + 1) / 0.3333)
+        continue
+
+    if n_iter % 3 == 2:
+        hexagon = opt_config.hexagons[np.random.randint(0, len(opt_config.hexagons))]
+
+        proposal, accepted = sampler.move_hexagon(hexagon, np.random.randint(0, opt_config.M))
+        sampler.update_state(proposal, accepted)
+        #if accepted:
+        #    print('!!!!!!!!!!!!!!!!!!!!!!!!!! HEXAGON FLIP ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        accepted_hex_single += accepted
+
+        print('hex acceptance single:', accepted_hex_single / (n_iter + 1) / 0.3333)
         continue
 
 
@@ -50,7 +64,7 @@ for n_iter in range(1000000):
 
     accepted_tube += accepted
 
-    print('tube acceptance:', accepted_tube / (n_iter + 1) / 0.5)
+    print('tube acceptance:', accepted_tube / (n_iter + 1) / 0.3333)
 
     #print('ENERGY:', sampler.energy(sampler.state))
     #print('ENERGY_PRINT', sampler.energy_print(sampler.state))
