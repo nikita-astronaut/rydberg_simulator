@@ -9,7 +9,11 @@ class Sampler(object):
         self.config = config
 
         self.state = np.random.randint(0, 2, size=(self.config.N_sites, self.config.M)) * 2 - 1
-        #self.state = np.tile(self.state, (1, self.config.M))
+        #self.state = np.ones(32)
+        #self.state[:16] = -1
+
+        #self.state = np.tile(self.state[:, np.newaxis], (1, self.config.M))
+        #print(self.state.shape)
 
         self.E = self.energy(self.state)
 
@@ -49,9 +53,11 @@ class Sampler(object):
         #t_slice = np.random.randint(0, self.config.M)
         proposal[hexagon, :] *= -1
 
+        #print(proposal[hexagon, 0], np.sum(proposal[hexagon, 0]))
+
 
         dE = self.energy(proposal) - self.E
-        print('tube hex move, dE = ', dE)
+        #print('tube hex move, dE = ', dE)
         #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
         #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
 
@@ -69,16 +75,55 @@ class Sampler(object):
 
 
         dE = self.energy(proposal) - self.E
-        print('single hex move, dE = ', dE)
+        #print('single hex move, dE = ', dE)
         #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
         #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
 
         #print('dE_Jt = ', self.config.Jt * np.sum(proposal * np.roll(proposal, shift=-1, axis=-1)) - self.config.Jt * np.sum(self.state * np.roll(self.state, shift=-1, axis=-1)))
         if self.return_rnd() < np.exp(-dE * self.config.beta):
-            print('ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            #print('ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             return proposal, True
         else:
             return self.state, False
+
+
+    def move_bond(self, bond, tidx):
+        proposal = self.state.copy()
+        #t_slice = np.random.randint(0, self.config.M)
+        proposal[bond, tidx] *= -1
+
+
+        dE = self.energy(proposal) - self.E
+        #print('single hex move, dE = ', dE)
+        #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
+        #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
+
+        #print('dE_Jt = ', self.config.Jt * np.sum(proposal * np.roll(proposal, shift=-1, axis=-1)) - self.config.Jt * np.sum(self.state * np.roll(self.state, shift=-1, axis=-1)))
+        if self.return_rnd() < np.exp(-dE * self.config.beta):
+            #print('ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            return proposal, True
+        else:
+            return self.state, False
+
+
+    def move_bond_tube(self, bond):
+        proposal = self.state.copy()
+        #t_slice = np.random.randint(0, self.config.M)
+        proposal[bond] *= -1
+
+
+        dE = self.energy(proposal) - self.E
+        #print('single hex move, dE = ', dE)
+        #print('dE_delta = ', - (self.config.delta / self.config.M) * np.sum(proposal) + (self.config.delta / self.config.M) * np.sum(self.state))
+        #print('dE_J_pert = ', (1. / self.config.M) * np.diag(proposal.T @ self.config.interaction @ proposal) - (1. / self.config.M) * np.diag(self.state.T @ self.config.interaction @ self.state))
+
+        #print('dE_Jt = ', self.config.Jt * np.sum(proposal * np.roll(proposal, shift=-1, axis=-1)) - self.config.Jt * np.sum(self.state * np.roll(self.state, shift=-1, axis=-1)))
+        if self.return_rnd() < np.exp(-dE * self.config.beta):
+            #print('ACCEPTED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            return proposal, True
+        else:
+            return self.state, False
+
 
     # https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.101.210602
     def move_local_clusters(self, ridx):
@@ -91,6 +136,7 @@ class Sampler(object):
         #print(np.sum(boundaries))
 
         clusters = get_clusters(boundaries)
+
         #print(clusters)
 
         #print(proposal[ridx])

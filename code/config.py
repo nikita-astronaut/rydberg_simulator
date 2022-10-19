@@ -35,7 +35,7 @@ class opt_parameters:
         self.dtau = self.beta / self.M
 
         self.Jt = -np.log(np.tanh(self.dtau * self.omega / 2.)) / 2. / self.beta
-        print(self.Jt)
+        print('Jt:', self.Jt)
         
 
         return
